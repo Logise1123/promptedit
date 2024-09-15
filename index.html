@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caja de Texto con GET y POST</title>
+    <!-- Cargar la fuente Montserrat -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+        textarea {
+            width: calc(100% - 60px); /* Ancho con margen de 30px a cada lado */
+            height: calc(100% - 60px); /* Altura con margen de 30px por arriba y abajo */
+            margin: 30px; /* Margen de 30px por todos los lados */
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 24px; /* Tamaño de letra más grande */
+        }
+    </style>
+</head>
+<body>
+
+<textarea id="textbox"></textarea>
+
+<script>
+    // Función para obtener el valor del parámetro 'bot' de la URL
+    function getBotParam() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('bot');
+    }
+
+    // Función para hacer una solicitud GET
+    async function fetchContent(filename) {
+        const url = `https://snapextensions.uni-goettingen.de/handleTextfile.php?type=read&filename=./textfiles/${filename}`;
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error('Error en la solicitud GET');
+            }
+            return await response.text();
+        } catch (error) {
+            console.error('Error al obtener el archivo:', error);
+            return 'Error al cargar el archivo.';
+        }
+    }
+
+    // Función para hacer una solicitud POST
+    async function postContent(content, filename) {
+        const url = `https://snapextensions.uni-goettingen.de/handleTextfile.php?type=write&content=${encodeURIComponent(content)}&filename=./textfiles/${filename}`;
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+            });
+            if (!response.ok) {
+                throw new Error('Error en la solicitud POST');
+            }
+            console.log('Contenido guardado correctamente');
+        } catch (error) {
+            console.error('Error al enviar el archivo:', error);
+        }
+    }
+
+    // Función principal que combina el contenido y lo muestra en la caja de texto
+    async function loadContent() {
+        const botParam = getBotParam();
+        const content = await fetchContent(botParam);
+        document.getElementById('textbox').value = content;
+
+        // Actualizar el contenido del archivo cada segundo
+        setInterval(() => {
+            const textboxContent = document.getElementById('textbox').value;
+            postContent(textboxContent, botParam);
+        }, 1000); // Intervalo de 1 segundo
+    }
+
+    // Llamamos a la función cuando se carga la página
+    window.onload = loadContent;
+</script>
+
+</body>
+</html>
