@@ -47,10 +47,16 @@
         }
     }
 
-    // Función para limpiar todo lo que no sea ASCII
+    // Función para limpiar todo lo que no sea ASCII excepto los saltos de línea
     function cleanText(text) {
-        // Eliminar todo lo que no sea un carácter ASCII (del 32 al 126 en la tabla ASCII)
-        return text.replace(/[^\x20-\x7E]/g, '');
+        // Reemplaza todos los saltos de línea (\n) con el carácter Ç
+        // Elimina todo lo que no sea un carácter ASCII (del 32 al 126 en la tabla ASCII), excepto los saltos de línea
+        return text.replace(/[^\x20-\x7E\n]/g, '').replace(/\n/g, 'Ç');
+    }
+
+    // Función para convertir los caracteres Ç en saltos de línea (\n) al cargar el contenido en la caja de texto
+    function restoreNewlines(text) {
+        return text.replace(/Ç/g, '\n');
     }
 
     // Función para hacer una solicitud POST
@@ -72,13 +78,16 @@
     // Función principal que combina el contenido y lo muestra en la caja de texto
     async function loadContent() {
         const botParam = getBotParam();
-        const content = await fetchContent(botParam);
+        let content = await fetchContent(botParam);
+
+        // Reemplaza los caracteres Ç por saltos de línea (\n) antes de mostrarlos en la caja de texto
+        content = restoreNewlines(content);
         document.getElementById('textbox').value = content;
 
         // Actualizar el contenido del archivo cada segundo
         setInterval(() => {
             let textboxContent = document.getElementById('textbox').value;
-            textboxContent = cleanText(textboxContent); // Limpiar texto
+            textboxContent = cleanText(textboxContent); // Limpiar texto y convertir saltos de línea a 'Ç'
             postContent(textboxContent, botParam);
         }, 1000); // Intervalo de 1 segundo
     }
@@ -89,4 +98,3 @@
 
 </body>
 </html>
-
